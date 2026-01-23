@@ -6,7 +6,7 @@ from pathlib import Path
 def test_hello_world_no_args():
     """Test hello world with no arguments"""
     result = subprocess.run(
-        [sys.executable, str(Path(__file__).parent / "eggs" / "main.py")],
+        [sys.executable, str(Path(__file__).parent.parent / "eggs" / "main.py")],
         capture_output=True,
         text=True,
     )
@@ -19,7 +19,11 @@ def test_hello_world_no_args():
 def test_hello_world_with_args():
     """Test hello world with arguments"""
     result = subprocess.run(
-        [sys.executable, str(Path(__file__).parent / "eggs" / "main.py"), "World"],
+        [
+            sys.executable,
+            str(Path(__file__).parent.parent / "eggs" / "main.py"),
+            "World",
+        ],
         capture_output=True,
         text=True,
     )
@@ -33,7 +37,7 @@ def test_hello_world_multiple_args():
     result = subprocess.run(
         [
             sys.executable,
-            str(Path(__file__).parent / "eggs" / "main.py"),
+            str(Path(__file__).parent.parent / "eggs" / "main.py"),
             "World",
             "Python",
         ],
