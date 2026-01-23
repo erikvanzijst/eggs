@@ -1,56 +1,71 @@
 # Eggs
 
 A simple CLI tool that prints "Hello " followed by the parameters, or the current user's username if no parameters are provided.
+It also provides a REST API powered by FastAPI.
 
 ## Installation
 
 Install using uv:
 
 ```bash
-uv pip install .
-```
-
-Or install in development mode:
-
-```bash
-uv pip install -e .
+uv sync
 ```
 
 ## Usage
 
+### CLI Mode
+
 ```bash
-eggs
+uv run eggs/main.py
 # Output: Hello erik (where erik is the current username)
 
-eggs World
+uv run eggs/main.py World
 # Output: Hello World
 
-eggs World Python
+uv run eggs/main.py World Python
 # Output: Hello World Python
+```
+
+### API Mode
+
+To run the FastAPI server:
+
+```bash
+uv run eggs/api.py
+```
+
+This will start a server on port 8000 by default. You can also set the PORT environment variable:
+
+```bash
+PORT=3000 uv run eggs/api.py
+```
+
+API Endpoint:
+```
+GET /api/v1/lists/
+```
+
+Response:
+```json
+[]
 ```
 
 ## Development
 
-Install development dependencies:
-
-```bash
-uv pip install -e ".[dev]"
-```
-
 Run tests:
 
 ```bash
-pytest
+uv run pytest
 ```
 
 Format code:
 
 ```bash
-black .
+uv run black .
 ```
 
 Lint code:
 
 ```bash
-flake8 .
+uv run flake8 .
 ```
