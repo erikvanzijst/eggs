@@ -2,11 +2,25 @@
 
 This is a python project that uses `uv` for dependency management.
 
-## Running the project
+
+
+## Create a virtual environment
 
 ```
 uv sync
-uv run eggs/main.py
+uv venv --allow-existing
+```
+
+## Activate the virtual environment
+
+```
+source .venv/bin/activate
+```
+
+## Running the project
+
+```
+python eggs/main.py
 ```
 
 ## Testing
@@ -19,6 +33,10 @@ uv run pytest -s tests/
 
 - Always use Context7 MCP when I need library/API documentation, code generation, setup or configuration steps without
   me having to explicitly ask.
+- Always first activate the python virtualenv using `source .venv/bin/activate` before running any commands.
+
+
+## Issue Tracking
 
 This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
 

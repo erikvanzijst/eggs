@@ -55,7 +55,7 @@ Response:
 Run tests:
 
 ```bash
-uv run pytest
+uv run pytest -s
 ```
 
 Format code:
