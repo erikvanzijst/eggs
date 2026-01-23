@@ -1,0 +1,36 @@
+[build-system]
+requires = ["uv>=0.1.0"]
+build-backend = "uv.build_api"
+
+[project]
+name = "eggs"
+version = "0.1.0"
+description = "A simple CLI tool"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Erik van Zijst", email = "erik.van.zijst@gmail.com"},
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    # Add your dependencies here
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=6.0",
+    "black>=21.0",
+    "flake8>=3.8",
+]
+
+[project.scripts]
+eggs = "eggs.main:main"
+
+[project.urls]
+Homepage = "https://github.com/yourusername/eggs"
+Repository = "https://github.com/yourusername/eggs"

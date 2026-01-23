@@ -1,5 +1,10 @@
 # Agent Instructions
 
+## Notes for agents
+
+- Always use Context7 MCP when I need library/API documentation, code generation, setup or configuration steps without
+  me having to explicitly ask.
+
 This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
 
 ## Quick Reference
