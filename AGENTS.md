@@ -1,5 +1,20 @@
 # Agent Instructions
 
+This is a python project that uses `uv` for dependency management.
+
+## Running the project
+
+```
+uv sync
+uv run eggs/main.py
+```
+
+## Testing
+
+```
+uv run pytest -s tests/
+```
+
 ## Notes for agents
 
 - Always use Context7 MCP when I need library/API documentation, code generation, setup or configuration steps without
