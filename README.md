@@ -3,6 +3,26 @@
 A simple CLI tool that prints "Hello " followed by the parameters, or the current user's username if no parameters are provided.
 It also provides a REST API powered by FastAPI.
 
+## Dev Container Setup
+
+This project uses a devcontainer to provide a consistent development environment.
+
+### Getting Started
+
+1. Install [Docker](https://www.docker.com/products/docker-desktop)
+2. Install [Visual Studio Code](https://code.visualstudio.com/)
+3. Install the [Remote - Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension for VS Code
+4. Open this project in VS Code
+5. When prompted, select "Reopen in Container" or run the command "Remote-Containers: Reopen in Container"
+
+### What's Included
+
+- Python 3.11
+- All project dependencies installed in development mode
+- Pre-configured Python extensions for VS Code
+- Flake8 and Black formatters
+- Pylance language server
+
 ## Installation
 
 Install using uv:
