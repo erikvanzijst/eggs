@@ -16,14 +16,8 @@ dependencies = [
     "fastapi>=0.104.0",
     "uvicorn>=0.24.0",
     "sqlmodel>=0.0.14",
+    "alembic>=1.14.1",
 ]
-
-[project.scripts]
-eggs = "eggs.api:main"
-
-[project.urls]
-Homepage = "https://github.com/erikvanzijst/eggs"
-Repository = "https://github.com/erikvanzijst/eggs"
 
 [dependency-groups]
 dev = [
@@ -32,6 +26,13 @@ dev = [
     "flake8>=3.8",
     "httpx>=0.28.1",
 ]
+
+[project.scripts]
+eggs = "eggs.api:main"
+
+[project.urls]
+Homepage = "https://github.com/erikvanzijst/eggs"
+Repository = "https://github.com/erikvanzijst/eggs"
 
 [build-system]
 requires = ["setuptools>=69", "wheel"]

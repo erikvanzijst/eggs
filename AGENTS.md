@@ -17,6 +17,17 @@ uv venv --allow-existing
 source .venv/bin/activate
 ```
 
+## Apply migrations
+
+Always run the migrations on a fresh database, after a `git pull`, or `git checkout` and after creating a new migration.
+
+```
+alembic upgrade head
+```
+
+Use `alembic revision -m "Some description"` to create a new migration.
+
+
 ## Running the project
 
 ```
