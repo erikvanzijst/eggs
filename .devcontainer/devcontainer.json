@@ -1,1 +1,33 @@
-{ "name": "Python 3", "image": "mcr.microsoft.com/devcontainers/python:3.11", "features": { "ghcr.io/devcontainers/features/python:1": { "version": "3.11" } }, "customizations": { "vscode": { "extensions": [ "ms-python.python", "ms-python.vscode-pylance", "ms-python.flake8", "ms-python.black-formatter" ] } }, "postCreateCommand": "pip install -e .[dev]", "remoteUser": "vscode" }
+{
+  "name": "Python 3",
+  "dockerFile": "Dockerfile",
+//  "features": {
+//    "ghcr.io/devcontainers/features/python:1": {
+//      "version": "3.11"
+//    }
+//  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.flake8",
+        "ms-python.black-formatter"
+      ]
+    }
+  },
+  "postCreateCommand": [
+    "ssh-keyscan github.com >> ~/.ssh/known_hosts",
+    "pip install -e .[dev]"
+  ],
+  "remoteUser": "vscode",
+  "containerEnv": {
+    "OPENAI_BASE_URL": "https://ai.deprutser.be/v1",
+    "OPENAI_API_KEY": "zi7shiosae8shuaD6Ang",
+    "SSH_AUTH_SOCK": "/ssh-agent"
+  },
+  "mounts": [
+    "source=${localEnv:HOME}/.config/opencode,target=/home/vscode/.config/opencode,type=bind,consistency=cached",
+    "source=${localEnv:SSH_AUTH_SOCK},target=/ssh-agent,type=bind"
+  ],
+}
