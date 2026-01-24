@@ -7,7 +7,7 @@ engine = create_engine(DATABASE_URL, echo=True)
 
 class ListModel(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
-    name: str
+    name: str = Field(unique=True)
 
 
 def init_db(engine):

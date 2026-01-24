@@ -3,6 +3,7 @@ import os
 import uvicorn
 from fastapi import FastAPI, HTTPException, Depends
 from sqlmodel import select
+from sqlalchemy.exc import IntegrityError
 
 from eggs.db import get_db, ListModel
 
@@ -23,15 +24,15 @@ def read_lists(db=Depends(get_db)):
 
 @app.post("/api/v1/lists/{name}")
 def create_list(name: str, db=Depends(get_db)):
-    existing = db.exec(select(ListModel).where(ListModel.name == name)).first()
-    if existing:
+    try:
+        list_item = ListModel(name=name)
+        db.add(list_item)
+        db.commit()
+        db.refresh(list_item)
+        return {"message": f"List '{name}' created successfully"}
+    except IntegrityError:
+        db.rollback()
         raise HTTPException(status_code=400, detail="List already exists")
-
-    list_item = ListModel(name=name)
-    db.add(list_item)
-    db.commit()
-    db.refresh(list_item)
-    return {"message": f"List '{name}' created successfully"}
 
 
 @app.delete("/api/v1/lists/{name}")
