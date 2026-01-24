@@ -60,15 +60,23 @@ This will start a server on port 8000 by default. You can also set the PORT envi
 PORT=3000 uv run eggs/api.py
 ```
 
-API Endpoint:
+API Endpoints:
 ```
 GET /api/v1/lists/
+POST /api/v1/lists/{name}
+DELETE /api/v1/lists/{name}
+GET /api/v1/health
 ```
 
 Response:
 ```json
 []
 ```
+
+OpenAPI Documentation:
+- Interactive documentation: http://localhost:8000/api/v1/docs
+- Alternative documentation: http://localhost:8000/api/v1/redoc
+- JSON schema: http://localhost:8000/api/v1/openapi.json
 
 ## Development
 
