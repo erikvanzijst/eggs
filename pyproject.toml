@@ -4,13 +4,12 @@ version = "0.1.0"
 description = "A simple CLI tool"
 readme = "README.md"
 requires-python = ">=3.8"
-license = {text = "MIT"}
+license = "MIT"
 authors = [
     {name = "Erik van Zijst", email = "erik.van.zijst@gmail.com"},
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 dependencies = [
@@ -20,11 +19,11 @@ dependencies = [
 ]
 
 [project.scripts]
-eggs = "eggs.main:main"
+eggs = "eggs.api:main"
 
 [project.urls]
-Homepage = "https://github.com/yourusername/eggs"
-Repository = "https://github.com/yourusername/eggs"
+Homepage = "https://github.com/erikvanzijst/eggs"
+Repository = "https://github.com/erikvanzijst/eggs"
 
 [dependency-groups]
 dev = [
@@ -33,3 +32,11 @@ dev = [
     "flake8>=3.8",
     "httpx>=0.28.1",
 ]
+
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["eggs*"]
+exclude = ["alembic*", "tests*"]
