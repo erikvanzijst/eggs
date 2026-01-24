@@ -1,5 +1,6 @@
-import sqlite3
-
+from sqlalchemy import create_engine
+from sqlalchemy.pool import StaticPool
+from sqlmodel import Session
 import pytest
 
 from eggs.db import init_db
@@ -7,10 +8,13 @@ from eggs.db import init_db
 
 @pytest.fixture
 def db_session():
-    conn = sqlite3.connect(":memory:", check_same_thread=False)
-    init_db(conn)
-    try:
-        yield conn
-        conn.commit()
-    finally:
-        conn.close()
+    engine = create_engine(
+        "sqlite:///:memory:",
+        echo=True,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+
+    init_db(engine)
+    with Session(engine) as session:
+        yield session

@@ -4,7 +4,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Depends
 from sqlmodel import select
 
-from eggs.db import get_db, init_db, ListModel
+from eggs.db import get_db, ListModel
 
 app = FastAPI()
 
@@ -23,8 +23,6 @@ def read_lists(db=Depends(get_db)):
 
 @app.post("/api/v1/lists/{name}")
 def create_list(name: str, db=Depends(get_db)):
-    from sqlmodel import select
-
     existing = db.exec(select(ListModel).where(ListModel.name == name)).first()
     if existing:
         raise HTTPException(status_code=400, detail="List already exists")
@@ -38,8 +36,6 @@ def create_list(name: str, db=Depends(get_db)):
 
 @app.delete("/api/v1/lists/{name}")
 def delete_list(name: str, db=Depends(get_db)):
-    from sqlmodel import select
-
     statement = select(ListModel).where(ListModel.name == name)
     list_item = db.exec(statement).first()
 

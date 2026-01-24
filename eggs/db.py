@@ -10,7 +10,7 @@ class ListModel(SQLModel, table=True):
     name: str
 
 
-def init_db():
+def init_db(engine):
     SQLModel.metadata.create_all(engine)
 
 
