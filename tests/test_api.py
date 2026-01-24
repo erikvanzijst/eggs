@@ -8,12 +8,9 @@ from tests.db import db_session
 
 
 @pytest.fixture
-def client(db_session: db_session):
+def client(db_session):
     def override_get_db():
-        try:
-            yield db_session
-        finally:
-            pass
+        yield db_session
 
     app.dependency_overrides[get_db] = override_get_db
 

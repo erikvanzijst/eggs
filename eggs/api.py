@@ -1,10 +1,10 @@
 import os
-import sqlite3
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Depends
+from sqlmodel import select
 
-from eggs.db import get_db, init_db
+from eggs.db import get_db, init_db, ListModel
 
 app = FastAPI()
 
@@ -15,32 +15,39 @@ def health():
 
 
 @app.get("/api/v1/lists/")
-def read_lists(db: sqlite3.Connection = Depends(get_db)):
-    cursor = db.execute("SELECT name FROM lists")
-    lists = [row[0] for row in cursor.fetchall()]
-    return lists
+def read_lists(db=Depends(get_db)):
+    statement = select(ListModel)
+    lists = db.exec(statement).all()
+    return [list_item.name for list_item in lists]
 
 
 @app.post("/api/v1/lists/{name}")
-def create_list(name: str, db: sqlite3.Connection = Depends(get_db)):
-    try:
-        db.execute("INSERT INTO lists (name) VALUES (?)", (name,))
-        return {"message": f"List '{name}' created successfully"}
-    except sqlite3.IntegrityError:
+def create_list(name: str, db=Depends(get_db)):
+    from sqlmodel import select
+
+    existing = db.exec(select(ListModel).where(ListModel.name == name)).first()
+    if existing:
         raise HTTPException(status_code=400, detail="List already exists")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+
+    list_item = ListModel(name=name)
+    db.add(list_item)
+    db.commit()
+    db.refresh(list_item)
+    return {"message": f"List '{name}' created successfully"}
 
 
 @app.delete("/api/v1/lists/{name}")
-def delete_list(name: str, db: sqlite3.Connection = Depends(get_db)):
-    cursor = db.execute("SELECT name FROM lists WHERE name = ?", (name,))
-    list_exists = cursor.fetchone()
+def delete_list(name: str, db=Depends(get_db)):
+    from sqlmodel import select
 
-    if not list_exists:
+    statement = select(ListModel).where(ListModel.name == name)
+    list_item = db.exec(statement).first()
+
+    if not list_item:
         raise HTTPException(status_code=404, detail="List not found")
 
-    db.execute("DELETE FROM lists WHERE name = ?", (name,))
+    db.delete(list_item)
+    db.commit()
     return {"message": f"List '{name}' deleted successfully"}
 
 

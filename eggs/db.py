@@ -1,22 +1,19 @@
-import sqlite3
+from sqlmodel import create_engine, Session, SQLModel, Field
+from typing import Generator
 
-DATABASE_URL = "lists.db"
-
-def init_db(conn):
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS lists (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL UNIQUE
-        )
-    """)
-    conn.commit()
+DATABASE_URL = "sqlite:///lists.db"
+engine = create_engine(DATABASE_URL, echo=True)
 
 
-def get_db():
-    conn = sqlite3.connect(DATABASE_URL)
-    init_db(conn)
-    try:
-        yield conn
-        conn.commit()
-    finally:
-        conn.close()
+class ListModel(SQLModel, table=True):
+    id: int = Field(default=None, primary_key=True)
+    name: str
+
+
+def init_db():
+    SQLModel.metadata.create_all(engine)
+
+
+def get_db() -> Generator[Session, None, None]:
+    with Session(engine) as session:
+        yield session
