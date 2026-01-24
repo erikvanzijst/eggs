@@ -32,6 +32,18 @@ def create_list(name: str, db: sqlite3.Connection = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.delete("/api/v1/lists/{name}")
+def delete_list(name: str, db: sqlite3.Connection = Depends(get_db)):
+    cursor = db.execute("SELECT name FROM lists WHERE name = ?", (name,))
+    list_exists = cursor.fetchone()
+
+    if not list_exists:
+        raise HTTPException(status_code=404, detail="List not found")
+
+    db.execute("DELETE FROM lists WHERE name = ?", (name,))
+    return {"message": f"List '{name}' deleted successfully"}
+
+
 def main():
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run("eggs.api:app", host="0.0.0.0", port=port, reload=True)
