@@ -1,11 +1,10 @@
 {
-  "name": "Python 3",
-  "dockerFile": "Dockerfile",
-//  "features": {
-//    "ghcr.io/devcontainers/features/python:1": {
-//      "version": "3.11"
-//    }
-//  },
+  "name": "eggs",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+
   "customizations": {
     "vscode": {
       "extensions": [
@@ -18,7 +17,8 @@
   },
   "postCreateCommand": [
     "ssh-keyscan github.com >> ~/.ssh/known_hosts",
-    "pip install -e .[dev]"
+    "pip install -e .[dev]",
+    "python --version && opencode --version || true"
   ],
   "remoteUser": "vscode",
   "containerEnv": {
@@ -29,5 +29,5 @@
   "mounts": [
     "source=${localEnv:HOME}/.config/opencode,target=/home/vscode/.config/opencode,type=bind,consistency=cached",
     "source=${localEnv:SSH_AUTH_SOCK},target=/ssh-agent,type=bind"
-  ],
+  ]
 }

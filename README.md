@@ -1,7 +1,6 @@
 # Eggs
 
-A simple CLI tool that prints "Hello " followed by the parameters, or the current user's username if no parameters are provided.
-It also provides a REST API powered by FastAPI.
+A simple shopping list webapp built as a FastAPI REST API and a React frontend.
 
 ## Dev Container Setup
 
