@@ -1,4 +1,5 @@
 import os
+import logging
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Depends
@@ -7,6 +8,12 @@ from sqlalchemy.exc import IntegrityError
 from pydantic import BaseModel
 
 from eggs.db import get_db, ListModel, ItemModel
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Eggs API",
@@ -20,6 +27,26 @@ app = FastAPI(
 
 class ItemCreate(BaseModel):
     """Model for creating a new item."""
+
+    name: str
+
+
+class ListResponse(BaseModel):
+    """Response model for List objects."""
+
+    model_config = {"from_attributes": True}
+
+    id: int
+    name: str
+
+
+class ItemResponse(BaseModel):
+    """Response model for Item objects."""
+
+    model_config = {"from_attributes": True}
+
+    id: int
+    list_id: int
     name: str
 
 
@@ -54,6 +81,7 @@ def health():
     Returns:
         str: "OK" if the API is healthy
     """
+    logger.info("Health check requested")
     return "OK"
 
 
@@ -65,13 +93,15 @@ def read_lists(db=Depends(get_db)):
     Returns:
         List[str]: A list of list names
     """
+    logger.info("Reading all lists")
     statement = select(ListModel)
     lists = db.exec(statement).all()
+    logger.debug(f"Found {len(lists)} lists")
     return [list_item.name for list_item in lists]
 
 
 @app.post("/api/v1/lists/{name}")
-def create_list(name: str, db=Depends(get_db)):
+def create_list(name: str, db=Depends(get_db)) -> ListResponse:
     """
     Create a new list.
 
@@ -79,19 +109,22 @@ def create_list(name: str, db=Depends(get_db)):
         name (str): The name of the list to create
 
     Returns:
-        dict: A success message
+        ListResponse: The created list object
 
     Raises:
         HTTPException: If the list already exists
     """
+    logger.info(f"Creating list: {name}")
     try:
         list_item = ListModel(name=name)
         db.add(list_item)
         db.commit()
         db.refresh(list_item)
-        return {"message": f"List '{name}' created successfully"}
+        logger.info(f"Successfully created list: {name} with id: {list_item.id}")
+        return ListResponse.model_validate(list_item)
     except IntegrityError:
         db.rollback()
+        logger.warning(f"Failed to create list {name}: already exists")
         raise HTTPException(status_code=400, detail="List already exists")
 
 
@@ -109,19 +142,22 @@ def delete_list(name: str, db=Depends(get_db)):
     Raises:
         HTTPException: If the list is not found
     """
+    logger.info(f"Deleting list: {name}")
     statement = select(ListModel).where(ListModel.name == name)
     list_item = db.exec(statement).first()
 
     if not list_item:
+        logger.warning(f"Attempted to delete non-existent list: {name}")
         raise HTTPException(status_code=404, detail="List not found")
 
     db.delete(list_item)
     db.commit()
+    logger.info(f"Successfully deleted list: {name}")
     return {"message": f"List '{name}' deleted successfully"}
 
 
 @app.post("/api/v1/lists/{list_name}/items/")
-def create_item(list_name: str, item: ItemCreate, db=Depends(get_db)):
+def create_item(list_name: str, item: ItemCreate, db=Depends(get_db)) -> ItemResponse:
     """
     Create a new item in a list.
 
@@ -130,11 +166,12 @@ def create_item(list_name: str, item: ItemCreate, db=Depends(get_db)):
         item (ItemCreate): The item to create
 
     Returns:
-        dict: A success message
+        ItemResponse: The created item object
 
     Raises:
         HTTPException: If the list is not found or item already exists
     """
+    logger.info(f"Creating item '{item.name}' in list: {list_name}")
     list_obj = get_list_by_name(list_name, db)
 
     try:
@@ -142,9 +179,15 @@ def create_item(list_name: str, item: ItemCreate, db=Depends(get_db)):
         db.add(new_item)
         db.commit()
         db.refresh(new_item)
-        return {"message": f"Item '{item.name}' created successfully in list '{list_name}'"}
+        logger.info(
+            f"Successfully created item '{item.name}' in list '{list_name}' with id: {new_item.id}"
+        )
+        return ItemResponse.model_validate(new_item)
     except IntegrityError:
         db.rollback()
+        logger.warning(
+            f"Failed to create item '{item.name}' in list '{list_name}': already exists"
+        )
         raise HTTPException(status_code=400, detail="Item already exists in this list")
 
 
@@ -162,10 +205,12 @@ def get_items(list_name: str, db=Depends(get_db)):
     Raises:
         HTTPException: If the list is not found
     """
+    logger.info(f"Reading items from list: {list_name}")
     list_obj = get_list_by_name(list_name, db)
 
     statement = select(ItemModel).where(ItemModel.list_id == list_obj.id)
     items = db.exec(statement).all()
+    logger.debug(f"Found {len(items)} items in list '{list_name}'")
     return [item.name for item in items]
 
 
@@ -184,20 +229,26 @@ def delete_item(list_name: str, item_name: str, db=Depends(get_db)):
     Raises:
         HTTPException: If the list or item is not found
     """
+    logger.info(f"Deleting item '{item_name}' from list: {list_name}")
     list_obj = get_list_by_name(list_name, db)
 
     statement = select(ItemModel).where(
-        ItemModel.list_id == list_obj.id,
-        ItemModel.name == item_name
+        ItemModel.list_id == list_obj.id, ItemModel.name == item_name
     )
     item = db.exec(statement).first()
 
     if not item:
+        logger.warning(
+            f"Attempted to delete non-existent item '{item_name}' from list '{list_name}'"
+        )
         raise HTTPException(status_code=404, detail="Item not found")
 
     db.delete(item)
     db.commit()
-    return {"message": f"Item '{item_name}' deleted successfully from list '{list_name}'"}
+    logger.info(f"Successfully deleted item '{item_name}' from list '{list_name}'")
+    return {
+        "message": f"Item '{item_name}' deleted successfully from list '{list_name}'"
+    }
 
 
 def main():

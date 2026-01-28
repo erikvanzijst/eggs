@@ -31,7 +31,7 @@ def test_create_list_success(client):
     """Test creating a new list successfully"""
     response = client.post("/api/v1/lists/todo")
     assert response.status_code == 200
-    assert response.json() == {"message": "List 'todo' created successfully"}
+    assert response.json() == {"id": 1, "name": "todo"}
 
 
 def test_read_lists_after_creation(client):
@@ -79,7 +79,7 @@ def test_create_item_success(client):
     # Create an item
     response = client.post("/api/v1/lists/shopping/items/", json={"name": "milk"})
     assert response.status_code == 200
-    assert response.json() == {"message": "Item 'milk' created successfully in list 'shopping'"}
+    assert response.json() == {"id": 1, "list_id": 1, "name": "milk"}
 
 
 def test_create_duplicate_item(client):
@@ -140,7 +140,9 @@ def test_delete_item_success(client):
     # Delete the item
     response = client.delete("/api/v1/lists/shopping/items/milk")
     assert response.status_code == 200
-    assert response.json() == {"message": "Item 'milk' deleted successfully from list 'shopping'"}
+    assert response.json() == {
+        "message": "Item 'milk' deleted successfully from list 'shopping'"
+    }
 
 
 def test_delete_nonexistent_item(client):
