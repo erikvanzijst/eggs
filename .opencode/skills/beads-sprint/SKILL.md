@@ -15,9 +15,9 @@ cycle repeats until all issues have been resolved.
 2. **Update the selected beads** issue status to in-progress
 3. **Work on the issue** without bothering the user with questions, running tests,
    linters, etc, to ensure quality and working code
-4. **File issues for remaining work** - Create issues for anything that needs follow-up
+4. **File issues for remaining work** - Create issues for anything that needs follow-up --
    while staying focused on the task at hand
-5. **Commit** the code listing all changes in the commit message
+5. `git commit` the code, listing all changes in the commit message
 6. After committing, ALWAYS follow the "Landing the Plane" flow below 
 
 

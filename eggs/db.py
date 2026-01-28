@@ -1,9 +1,10 @@
+import os
 from sqlmodel import create_engine, Session, SQLModel, Field, Relationship
 from typing import Generator, Optional
 from sqlalchemy import UniqueConstraint
 
-DATABASE_URL = "sqlite:///lists.db"
-engine = create_engine(DATABASE_URL, echo=True)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///lists.db")
+engine = create_engine(DATABASE_URL, echo=False)
 
 
 class ListModel(SQLModel, table=True):

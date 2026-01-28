@@ -6,6 +6,7 @@ from fastapi import FastAPI, HTTPException, Depends
 from sqlmodel import select, Session
 from sqlalchemy.exc import IntegrityError
 from pydantic import BaseModel
+from typing import AsyncGenerator
 
 from eggs.db import get_db, ListModel, ItemModel
 
@@ -50,7 +51,7 @@ class ItemResponse(BaseModel):
     name: str
 
 
-def get_list_by_name(list_name: str, db: Session) -> ListModel:
+async def get_list_by_name(list_name: str, db: Session) -> ListModel:
     """
     Get a list by name.
 
@@ -74,7 +75,7 @@ def get_list_by_name(list_name: str, db: Session) -> ListModel:
 
 
 @app.get("/api/v1/health")
-def health():
+async def health():
     """
     Check the health of the API.
 
@@ -86,7 +87,7 @@ def health():
 
 
 @app.get("/api/v1/lists/")
-def read_lists(db=Depends(get_db)):
+async def read_lists(db: Session = Depends(get_db)):
     """
     Get all lists.
 
@@ -101,7 +102,7 @@ def read_lists(db=Depends(get_db)):
 
 
 @app.post("/api/v1/lists/{name}")
-def create_list(name: str, db=Depends(get_db)) -> ListResponse:
+async def create_list(name: str, db: Session = Depends(get_db)) -> ListResponse:
     """
     Create a new list.
 
@@ -129,7 +130,7 @@ def create_list(name: str, db=Depends(get_db)) -> ListResponse:
 
 
 @app.delete("/api/v1/lists/{name}")
-def delete_list(name: str, db=Depends(get_db)):
+async def delete_list(name: str, db: Session = Depends(get_db)):
     """
     Delete a list.
 
@@ -157,7 +158,9 @@ def delete_list(name: str, db=Depends(get_db)):
 
 
 @app.post("/api/v1/lists/{list_name}/items/")
-def create_item(list_name: str, item: ItemCreate, db=Depends(get_db)) -> ItemResponse:
+async def create_item(
+    list_name: str, item: ItemCreate, db: Session = Depends(get_db)
+) -> ItemResponse:
     """
     Create a new item in a list.
 
@@ -172,7 +175,7 @@ def create_item(list_name: str, item: ItemCreate, db=Depends(get_db)) -> ItemRes
         HTTPException: If the list is not found or item already exists
     """
     logger.info(f"Creating item '{item.name}' in list: {list_name}")
-    list_obj = get_list_by_name(list_name, db)
+    list_obj = await get_list_by_name(list_name, db)
 
     try:
         new_item = ItemModel(name=item.name, list_id=list_obj.id)
@@ -192,7 +195,7 @@ def create_item(list_name: str, item: ItemCreate, db=Depends(get_db)) -> ItemRes
 
 
 @app.get("/api/v1/lists/{list_name}/items/")
-def get_items(list_name: str, db=Depends(get_db)):
+async def get_items(list_name: str, db: Session = Depends(get_db)):
     """
     Get all items from a list.
 
@@ -206,7 +209,7 @@ def get_items(list_name: str, db=Depends(get_db)):
         HTTPException: If the list is not found
     """
     logger.info(f"Reading items from list: {list_name}")
-    list_obj = get_list_by_name(list_name, db)
+    list_obj = await get_list_by_name(list_name, db)
 
     statement = select(ItemModel).where(ItemModel.list_id == list_obj.id)
     items = db.exec(statement).all()
@@ -215,7 +218,7 @@ def get_items(list_name: str, db=Depends(get_db)):
 
 
 @app.delete("/api/v1/lists/{list_name}/items/{item_name}")
-def delete_item(list_name: str, item_name: str, db=Depends(get_db)):
+async def delete_item(list_name: str, item_name: str, db: Session = Depends(get_db)):
     """
     Delete an item from a list.
 
@@ -230,7 +233,7 @@ def delete_item(list_name: str, item_name: str, db=Depends(get_db)):
         HTTPException: If the list or item is not found
     """
     logger.info(f"Deleting item '{item_name}' from list: {list_name}")
-    list_obj = get_list_by_name(list_name, db)
+    list_obj = await get_list_by_name(list_name, db)
 
     statement = select(ItemModel).where(
         ItemModel.list_id == list_obj.id, ItemModel.name == item_name
@@ -251,10 +254,12 @@ def delete_item(list_name: str, item_name: str, db=Depends(get_db)):
     }
 
 
-def main():
+async def main():
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run("eggs.api:app", host="0.0.0.0", port=port, reload=True)
 
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+
+    asyncio.run(main())
