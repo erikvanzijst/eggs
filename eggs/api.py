@@ -8,7 +8,6 @@ from fastapi import FastAPI, HTTPException, Depends
 from sqlmodel import select, Session
 from sqlalchemy.exc import IntegrityError
 from pydantic import BaseModel
-from typing import AsyncGenerator
 
 # Local imports
 from eggs.db import get_db, ListModel, ItemModel
