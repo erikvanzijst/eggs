@@ -20,6 +20,44 @@ uv run eggs/api.py         # Start FastAPI server (default port 8000)
 PORT=3000 uv run eggs/api.py  # Start with custom port
 ```
 
+### Working with the API
+
+The API follows RESTful conventions with nested child resources for items within lists.
+
+#### List Operations
+```bash
+# Get all lists
+curl http://localhost:8000/api/v1/lists/
+
+# Create a list
+curl -X POST http://localhost:8000/api/v1/lists/shopping
+
+# Delete a list
+curl -X DELETE http://localhost:8000/api/v1/lists/shopping
+```
+
+#### Item Operations
+Items are child resources of lists, accessed via `/api/v1/lists/{list_name}/items/`:
+
+```bash
+# Create an item in a list
+curl -X POST http://localhost:8000/api/v1/lists/shopping/items/ \
+  -H "Content-Type: application/json" \
+  -d '{"name": "milk"}'
+
+# Get all items in a list
+curl http://localhost:8000/api/v1/lists/shopping/items/
+
+# Delete an item from a list
+curl -X DELETE http://localhost:8000/api/v1/lists/shopping/items/milk
+```
+
+**Notes:**
+- Items must belong to a list
+- Item names are unique within a list (enforced by composite unique constraint)
+- The same item name can exist in different lists
+- Deleting a list cascades to delete all its items
+
 ### Testing
 ```bash
 uv run pytest -s           # Run all tests with output
@@ -45,7 +83,9 @@ alembic revision -m "description"  # Create new migration
 
 ### Database Layer (`eggs/db.py`)
 - Uses SQLModel (combines SQLAlchemy + Pydantic) for ORM
-- Single `ListModel` table with `id` (primary key) and `name` (unique)
+- `ListModel` table with `id` (primary key) and `name` (unique)
+- `ItemModel` table with foreign key to `ListModel`, composite unique constraint on `(list_id, name)`
+- Cascade delete: removing a list automatically removes its items
 - `get_db()` generator provides database sessions via dependency injection
 - SQLite database: `lists.db` in project root
 - Schema managed via Alembic migrations in `alembic/versions/`
@@ -53,9 +93,11 @@ alembic revision -m "description"  # Create new migration
 ### API Layer (`eggs/api.py`)
 - FastAPI application with dependency injection pattern
 - All endpoints prefixed with `/api/v1/`
+- RESTful child resource pattern: items are nested under lists
 - OpenAPI docs available at `/api/v1/docs` and `/api/v1/redoc`
 - Uses `Depends(get_db)` to inject database sessions into route handlers
 - Error handling: `IntegrityError` → HTTP 400, not found → HTTP 404
+- Endpoints: lists (GET, POST, DELETE), items (GET, POST, DELETE)
 
 ### Testing (`tests/`)
 - Uses pytest with FastAPI's TestClient
