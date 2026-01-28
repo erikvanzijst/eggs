@@ -1,6 +1,8 @@
+# Standard library imports
 import os
 import logging
 
+# Third-party imports
 import uvicorn
 from fastapi import FastAPI, HTTPException, Depends
 from sqlmodel import select, Session
@@ -8,6 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from pydantic import BaseModel
 from typing import AsyncGenerator
 
+# Local imports
 from eggs.db import get_db, ListModel, ItemModel
 
 # Configure logging
@@ -87,7 +90,7 @@ async def health():
 
 
 @app.get("/api/v1/lists/")
-async def read_lists(db: Session = Depends(get_db)):
+async def read_lists(db: Session = Depends(get_db)) -> list[str]:
     """
     Get all lists.
 
@@ -99,6 +102,36 @@ async def read_lists(db: Session = Depends(get_db)):
     lists = db.exec(statement).all()
     logger.debug(f"Found {len(lists)} lists")
     return [list_item.name for list_item in lists]
+
+
+def validate_name(name: str, name_type: str) -> None:
+    """
+    Validate the name of a list or item.
+
+    Args:
+        name (str): The name to validate
+        name_type (str): The type of name being validated (list or item)
+
+    Raises:
+        HTTPException: If the name is invalid
+    """
+    if not name:
+        raise HTTPException(
+            status_code=400, detail=f"{name_type.capitalize()} name cannot be empty"
+        )
+
+    if len(name) > 100:
+        raise HTTPException(
+            status_code=400,
+            detail=f"{name_type.capitalize()} name cannot exceed 100 characters",
+        )
+
+    # Allow only alphanumeric characters, spaces, hyphens, and underscores
+    if not name.replace(" ", "").replace("-", "").replace("_", "").isalnum():
+        raise HTTPException(
+            status_code=400,
+            detail=f"{name_type.capitalize()} name can only contain alphanumeric characters, spaces, hyphens, and underscores",
+        )
 
 
 @app.post("/api/v1/lists/{name}")
@@ -113,8 +146,10 @@ async def create_list(name: str, db: Session = Depends(get_db)) -> ListResponse:
         ListResponse: The created list object
 
     Raises:
-        HTTPException: If the list already exists
+        HTTPException: If the list already exists or name is invalid
     """
+    validate_name(name, "list")
+
     logger.info(f"Creating list: {name}")
     try:
         list_item = ListModel(name=name)
@@ -130,7 +165,7 @@ async def create_list(name: str, db: Session = Depends(get_db)) -> ListResponse:
 
 
 @app.delete("/api/v1/lists/{name}")
-async def delete_list(name: str, db: Session = Depends(get_db)):
+async def delete_list(name: str, db: Session = Depends(get_db)) -> dict[str, str]:
     """
     Delete a list.
 
@@ -174,6 +209,9 @@ async def create_item(
     Raises:
         HTTPException: If the list is not found or item already exists
     """
+    validate_name(list_name, "list")
+    validate_name(item.name, "item")
+
     logger.info(f"Creating item '{item.name}' in list: {list_name}")
     list_obj = await get_list_by_name(list_name, db)
 
@@ -195,7 +233,7 @@ async def create_item(
 
 
 @app.get("/api/v1/lists/{list_name}/items/")
-async def get_items(list_name: str, db: Session = Depends(get_db)):
+async def get_items(list_name: str, db: Session = Depends(get_db)) -> list[str]:
     """
     Get all items from a list.
 
@@ -218,7 +256,9 @@ async def get_items(list_name: str, db: Session = Depends(get_db)):
 
 
 @app.delete("/api/v1/lists/{list_name}/items/{item_name}")
-async def delete_item(list_name: str, item_name: str, db: Session = Depends(get_db)):
+async def delete_item(
+    list_name: str, item_name: str, db: Session = Depends(get_db)
+) -> dict[str, str]:
     """
     Delete an item from a list.
 
@@ -254,7 +294,7 @@ async def delete_item(list_name: str, item_name: str, db: Session = Depends(get_
     }
 
 
-async def main():
+async def main() -> None:
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run("eggs.api:app", host="0.0.0.0", port=port, reload=True)
 

@@ -187,3 +187,59 @@ def test_cascade_delete_items(client):
     response = client.get("/api/v1/lists/shopping/items/")
     assert response.status_code == 404
     assert response.json() == {"detail": "List not found"}
+
+
+def test_create_list_empty_name(client):
+    """Test creating a list with an empty name fails"""
+    # Test with the correct endpoint, but since we can't pass name as a parameter
+    # in the body, the test just verifies that we can't create an empty name
+    # in the URL path - which results in 405 error since the endpoint doesn't exist
+    response = client.post("/api/v1/lists/")
+    assert response.status_code == 405
+
+
+def test_create_list_long_name(client):
+    """Test creating a list with a name exceeding 100 characters fails"""
+    long_name = "a" * 101
+    response = client.post(f"/api/v1/lists/{long_name}")
+    assert response.status_code == 400
+    assert "cannot exceed 100 characters" in response.json().get("detail", "")
+
+
+def test_create_list_invalid_characters(client):
+    """Test creating a list with invalid characters fails"""
+    response = client.post("/api/v1/lists/list@name")
+    assert response.status_code == 400
+    assert "can only contain alphanumeric characters" in response.json().get(
+        "detail", ""
+    )
+
+
+def test_create_item_empty_name(client):
+    """Test creating an item with an empty name fails"""
+    # Create a list first
+    client.post("/api/v1/lists/todo")
+    response = client.post("/api/v1/lists/todo/items/", json={"name": ""})
+    assert response.status_code == 400
+    assert "cannot be empty" in response.json().get("detail", "")
+
+
+def test_create_item_long_name(client):
+    """Test creating an item with a name exceeding 100 characters fails"""
+    # Create a list first
+    client.post("/api/v1/lists/todo")
+    long_name = "a" * 101
+    response = client.post("/api/v1/lists/todo/items/", json={"name": long_name})
+    assert response.status_code == 400
+    assert "cannot exceed 100 characters" in response.json().get("detail", "")
+
+
+def test_create_item_invalid_characters(client):
+    """Test creating an item with invalid characters fails"""
+    # Create a list first
+    client.post("/api/v1/lists/todo")
+    response = client.post("/api/v1/lists/todo/items/", json={"name": "item@name"})
+    assert response.status_code == 400
+    assert "can only contain alphanumeric characters" in response.json().get(
+        "detail", ""
+    )

@@ -18,7 +18,7 @@ cycle repeats until all issues have been resolved.
 4. **File issues for remaining work** - Create issues for anything that needs follow-up --
    while staying focused on the task at hand
 5. `git commit` the code, listing all changes in the commit message
-6. After committing, ALWAYS follow the "Landing the Plane" flow below 
+6. After committing, ALWAYS FOLLOW the "Landing the Plane" instructions below ->
 
 
 # Landing the Plane (Session Completion)
@@ -39,10 +39,12 @@ cycle repeats until all issues have been resolved.
    ```
 5. **Clean up** - Clear stashes, prune remote branches
 6. **Verify** - All changes committed AND pushed
-7. **Hand off** - Provide context for next session
 
 **CRITICAL RULES:**
 - Work is NOT complete until `git push` succeeds
 - NEVER stop before pushing - that leaves work stranded locally
 - NEVER say "ready to push when you are" - YOU must push
 - If push fails, resolve and retry until it succeeds
+
+When all done, pick up the next bead and complete the cycle until all beads have been
+resolved.
