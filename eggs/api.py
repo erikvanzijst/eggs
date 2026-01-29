@@ -5,6 +5,7 @@ import logging
 # Third-party imports
 import uvicorn
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import select, Session
 from sqlalchemy.exc import IntegrityError
 from pydantic import BaseModel, Field
@@ -26,6 +27,15 @@ app = FastAPI(
     openapi_url="/api/v1/openapi.json",
     docs_url="/api/v1/docs",
     redoc_url="/api/v1/redoc",
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -249,12 +259,11 @@ async def get_item(
     """
     logger.info(f"Getting item '{item_name}' from list: {list_name}")
 
-    item = (db
-            .exec(select(ItemModel)
-                  .join(ListModel)
-                  .where((ListModel.name == list_name) &
-                         (ItemModel.name == item_name)))
-            .first())
+    item = db.exec(
+        select(ItemModel)
+        .join(ListModel)
+        .where((ListModel.name == list_name) & (ItemModel.name == item_name))
+    ).first()
 
     if not item:
         logger.warning(
