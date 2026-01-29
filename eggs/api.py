@@ -170,16 +170,16 @@ async def delete_list(name: str, db: Session = Depends(get_db)) -> dict[str, str
     return {"message": f"List '{name}' deleted successfully"}
 
 
-@app.post("/api/v1/lists/{list_name}/items/")
+@app.post("/api/v1/lists/{list_name}/items/{item_name}")
 async def create_item(
-    list_name: ValidatedName, item: ItemCreate, db: Session = Depends(get_db)
+    list_name: ValidatedName, item_name: ValidatedName, db: Session = Depends(get_db)
 ) -> ItemResponse:
     """
     Create a new item in a list.
 
     Args:
         list_name (str): The name of the list
-        item (ItemCreate): The item to create
+        item_name (str): The name of the item to create
 
     Returns:
         ItemResponse: The created item object
@@ -188,22 +188,22 @@ async def create_item(
         HTTPException: If the list is not found or item already exists
     """
 
-    logger.info(f"Creating item '{item.name}' in list: {list_name}")
+    logger.info(f"Creating item '{item_name}' in list: {list_name}")
     list_obj = await get_list_by_name(list_name, db)
 
     try:
-        new_item = ItemModel(name=item.name, list_id=list_obj.id)
+        new_item = ItemModel(name=item_name, list_id=list_obj.id)
         db.add(new_item)
         db.commit()
         db.refresh(new_item)
         logger.info(
-            f"Successfully created item '{item.name}' in list '{list_name}' with id: {new_item.id}"
+            f"Successfully created item '{item_name}' in list '{list_name}' with id: {new_item.id}"
         )
         return ItemResponse.model_validate(new_item)
     except IntegrityError:
         db.rollback()
         logger.warning(
-            f"Failed to create item '{item.name}' in list '{list_name}': already exists"
+            f"Failed to create item '{item_name}' in list '{list_name}': already exists"
         )
         raise HTTPException(status_code=400, detail="Item already exists in this list")
 
@@ -233,7 +233,7 @@ async def get_items(list_name: str, db: Session = Depends(get_db)) -> list[str]:
 
 @app.delete("/api/v1/lists/{list_name}/items/{item_name}")
 async def delete_item(
-    list_name: str, item_name: str, db: Session = Depends(get_db)
+    list_name: ValidatedName, item_name: ValidatedName, db: Session = Depends(get_db)
 ) -> dict[str, str]:
     """
     Delete an item from a list.
