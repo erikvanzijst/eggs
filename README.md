@@ -32,19 +32,6 @@ uv sync
 
 ## Usage
 
-### CLI Mode
-
-```bash
-uv run eggs/main.py
-# Output: Hello erik (where erik is the current username)
-
-uv run eggs/main.py World
-# Output: Hello World
-
-uv run eggs/main.py World Python
-# Output: Hello World Python
-```
-
 ### API Mode
 
 To run the FastAPI server:
@@ -53,10 +40,10 @@ To run the FastAPI server:
 uv run eggs/api.py
 ```
 
-This will start a server on port 8000 by default. You can also set the PORT environment variable:
+This will start a server on port 8000 by default:
 
 ```bash
-PORT=3000 uv run eggs/api.py
+uv run eggs/api.py
 ```
 
 API Endpoints:
@@ -96,3 +83,36 @@ Lint code:
 ```bash
 uv run flake8 .
 ```
+
+## Frontend Development
+
+### Running the Frontend
+
+To run the React frontend:
+
+```bash
+cd frontend
+npm start
+```
+
+This will start the development server on port 3000 by default.
+
+### Running Frontend Tests
+
+To run the frontend tests:
+
+```bash
+cd frontend
+npm test -- --watchAll=false
+```
+
+This will run all frontend tests including the tests for the shopping list service.
+
+### Available Scripts
+
+In the frontend directory, you can also run:
+
+- `npm start` - Runs the app in development mode
+- `npm test` - Runs the test suite
+- `npm run build` - Builds the app for production
+- `npm run eject` - Removes the single build dependency

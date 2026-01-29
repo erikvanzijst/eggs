@@ -27,7 +27,7 @@ It correctly bundles React in production mode and optimizes the build for the be
 The build is minified and the filenames include the hashes.\
 Your app is ready to be deployed!
 
-### `npm test`
+### `npm test -- --watchAll=false`
 
 Launches the test runner in the interactive watch mode.\
 See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
@@ -39,3 +39,13 @@ See the section about [running tests](https://facebook.github.io/create-react-ap
 - React Router DOM
 - MUI (Material UI)
 - Emotion for styling
+
+## Testing
+
+This project includes unit tests for the shopping list service using React Testing Library and fetch mocks. To run the tests:
+
+```bash
+npm test
+```
+
+Tests are located in `src/services/shoppingListService.test.ts`.

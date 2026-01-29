@@ -40,11 +40,21 @@ python eggs/main.py
 uv run pytest -s tests/
 ```
 
+## Frontend Testing
+
+The frontend has its own test suite. To run frontend tests (ALWAYS use `--watchAll=false`!):
+
+```bash
+cd frontend
+npm test -- --watchAll=false
+```
+
 ## Notes for agents
 
 - Always use Context7 MCP when I need library/API documentation, code generation, setup or configuration steps without
   me having to explicitly ask.
 - Always first activate the python virtualenv using `source .venv/bin/activate` before running any commands.
+- The project has both a Python backend (in the root) and a React frontend (in the frontend/ directory)
 
 
 ## Issue Tracking
