@@ -248,12 +248,13 @@ async def get_item(
         HTTPException: If the list or item is not found
     """
     logger.info(f"Getting item '{item_name}' from list: {list_name}")
-    list_obj = await get_list_by_name(list_name, db)
 
-    statement = select(ItemModel).where(
-        ItemModel.list_id == list_obj.id, ItemModel.name == item_name
-    )
-    item = db.exec(statement).first()
+    item = (db
+            .exec(select(ItemModel)
+                  .join(ListModel)
+                  .where((ListModel.name == list_name) &
+                         (ItemModel.name == item_name)))
+            .first())
 
     if not item:
         logger.warning(
