@@ -1,11 +1,11 @@
 # Standard library imports
 import os
 import logging
-import re
 
 # Third-party imports
 import uvicorn
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import select, Session
 from sqlalchemy.exc import IntegrityError
 from pydantic import BaseModel, Field
@@ -27,6 +27,15 @@ app = FastAPI(
     openapi_url="/api/v1/openapi.json",
     docs_url="/api/v1/docs",
     redoc_url="/api/v1/redoc",
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -170,16 +179,16 @@ async def delete_list(name: str, db: Session = Depends(get_db)) -> dict[str, str
     return {"message": f"List '{name}' deleted successfully"}
 
 
-@app.post("/api/v1/lists/{list_name}/items/")
+@app.post("/api/v1/lists/{list_name}/items/{item_name}")
 async def create_item(
-    list_name: ValidatedName, item: ItemCreate, db: Session = Depends(get_db)
+    list_name: ValidatedName, item_name: ValidatedName, db: Session = Depends(get_db)
 ) -> ItemResponse:
     """
     Create a new item in a list.
 
     Args:
         list_name (str): The name of the list
-        item (ItemCreate): The item to create
+        item_name (str): The name of the item to create
 
     Returns:
         ItemResponse: The created item object
@@ -188,22 +197,22 @@ async def create_item(
         HTTPException: If the list is not found or item already exists
     """
 
-    logger.info(f"Creating item '{item.name}' in list: {list_name}")
+    logger.info(f"Creating item '{item_name}' in list: {list_name}")
     list_obj = await get_list_by_name(list_name, db)
 
     try:
-        new_item = ItemModel(name=item.name, list_id=list_obj.id)
+        new_item = ItemModel(name=item_name, list_id=list_obj.id)
         db.add(new_item)
         db.commit()
         db.refresh(new_item)
         logger.info(
-            f"Successfully created item '{item.name}' in list '{list_name}' with id: {new_item.id}"
+            f"Successfully created item '{item_name}' in list '{list_name}' with id: {new_item.id}"
         )
         return ItemResponse.model_validate(new_item)
     except IntegrityError:
         db.rollback()
         logger.warning(
-            f"Failed to create item '{item.name}' in list '{list_name}': already exists"
+            f"Failed to create item '{item_name}' in list '{list_name}': already exists"
         )
         raise HTTPException(status_code=400, detail="Item already exists in this list")
 
@@ -231,9 +240,44 @@ async def get_items(list_name: str, db: Session = Depends(get_db)) -> list[str]:
     return [item.name for item in items]
 
 
+@app.get("/api/v1/lists/{list_name}/items/{item_name}")
+async def get_item(
+    list_name: ValidatedName, item_name: ValidatedName, db: Session = Depends(get_db)
+) -> ItemResponse:
+    """
+    Get an item from a list.
+
+    Args:
+        list_name (str): The name of the list
+        item_name (str): The name of the item to retrieve
+
+    Returns:
+        ItemResponse: The item object
+
+    Raises:
+        HTTPException: If the list or item is not found
+    """
+    logger.info(f"Getting item '{item_name}' from list: {list_name}")
+
+    item = db.exec(
+        select(ItemModel)
+        .join(ListModel)
+        .where((ListModel.name == list_name) & (ItemModel.name == item_name))
+    ).first()
+
+    if not item:
+        logger.warning(
+            f"Attempted to get non-existent item '{item_name}' from list '{list_name}'"
+        )
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    logger.info(f"Successfully retrieved item '{item_name}' from list '{list_name}'")
+    return ItemResponse.model_validate(item)
+
+
 @app.delete("/api/v1/lists/{list_name}/items/{item_name}")
 async def delete_item(
-    list_name: str, item_name: str, db: Session = Depends(get_db)
+    list_name: ValidatedName, item_name: ValidatedName, db: Session = Depends(get_db)
 ) -> dict[str, str]:
     """
     Delete an item from a list.

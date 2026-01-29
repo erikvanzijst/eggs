@@ -77,7 +77,7 @@ def test_create_item_success(client):
     # Create a list first
     client.post("/api/v1/lists/shopping")
     # Create an item
-    response = client.post("/api/v1/lists/shopping/items/", json={"name": "milk"})
+    response = client.post("/api/v1/lists/shopping/items/milk")
     assert response.status_code == 200
     assert response.json() == {"id": 1, "list_id": 1, "name": "milk"}
 
@@ -86,16 +86,16 @@ def test_create_duplicate_item(client):
     """Test creating a duplicate item in the same list fails"""
     # Create a list and item
     client.post("/api/v1/lists/shopping")
-    client.post("/api/v1/lists/shopping/items/", json={"name": "milk"})
+    client.post("/api/v1/lists/shopping/items/milk")
     # Try to create the same item again
-    response = client.post("/api/v1/lists/shopping/items/", json={"name": "milk"})
+    response = client.post("/api/v1/lists/shopping/items/milk")
     assert response.status_code == 400
     assert "already exists" in response.json().get("detail", "")
 
 
 def test_create_item_nonexistent_list(client):
     """Test creating an item in a non-existent list fails"""
-    response = client.post("/api/v1/lists/nonexistent/items/", json={"name": "milk"})
+    response = client.post("/api/v1/lists/nonexistent/items/milk")
     assert response.status_code == 404
     assert response.json() == {"detail": "List not found"}
 
@@ -114,8 +114,8 @@ def test_read_items_after_creation(client):
     """Test reading items after creating them"""
     # Create a list and items
     client.post("/api/v1/lists/shopping")
-    client.post("/api/v1/lists/shopping/items/", json={"name": "milk"})
-    client.post("/api/v1/lists/shopping/items/", json={"name": "eggs"})
+    client.post("/api/v1/lists/shopping/items/milk")
+    client.post("/api/v1/lists/shopping/items/eggs")
     # Read items
     response = client.get("/api/v1/lists/shopping/items/")
     assert response.status_code == 200
@@ -136,7 +136,7 @@ def test_delete_item_success(client):
     """Test deleting an item successfully"""
     # Create a list and item
     client.post("/api/v1/lists/shopping")
-    client.post("/api/v1/lists/shopping/items/", json={"name": "milk"})
+    client.post("/api/v1/lists/shopping/items/milk")
     # Delete the item
     response = client.delete("/api/v1/lists/shopping/items/milk")
     assert response.status_code == 200
@@ -161,8 +161,8 @@ def test_same_item_different_lists(client):
     client.post("/api/v1/lists/shopping")
     client.post("/api/v1/lists/todo")
     # Create the same item in both lists
-    response1 = client.post("/api/v1/lists/shopping/items/", json={"name": "milk"})
-    response2 = client.post("/api/v1/lists/todo/items/", json={"name": "milk"})
+    response1 = client.post("/api/v1/lists/shopping/items/milk")
+    response2 = client.post("/api/v1/lists/todo/items/milk")
     assert response1.status_code == 200
     assert response2.status_code == 200
     # Verify items are in both lists
@@ -176,8 +176,8 @@ def test_cascade_delete_items(client):
     """Test that deleting a list cascades to delete its items"""
     # Create a list with items
     client.post("/api/v1/lists/shopping")
-    client.post("/api/v1/lists/shopping/items/", json={"name": "milk"})
-    client.post("/api/v1/lists/shopping/items/", json={"name": "eggs"})
+    client.post("/api/v1/lists/shopping/items/milk")
+    client.post("/api/v1/lists/shopping/items/eggs")
     # Verify items exist
     items_before = client.get("/api/v1/lists/shopping/items/").json()
     assert len(items_before) == 2
@@ -216,24 +216,12 @@ def test_create_list_invalid_characters(client):
     assert "pattern" in str(detail[0].get("msg", ""))
 
 
-def test_create_item_empty_name(client):
-    """Test creating an item with an empty name fails"""
-    # Create a list first
-    client.post("/api/v1/lists/todo")
-    response = client.post("/api/v1/lists/todo/items/", json={"name": ""})
-    assert response.status_code == 422
-    # Check that the error message contains the expected min_length error
-    detail = response.json().get("detail", [])
-    assert len(detail) > 0
-    assert "min_length" in str(detail[0].get("ctx", {}))
-
-
 def test_create_item_long_name(client):
     """Test creating an item with a name exceeding 100 characters fails"""
     # Create a list first
     client.post("/api/v1/lists/todo")
     long_name = "a" * 101
-    response = client.post("/api/v1/lists/todo/items/", json={"name": long_name})
+    response = client.post(f"/api/v1/lists/todo/items/{long_name}")
     assert response.status_code == 422
     # Check that the error message contains the expected max_length error
     detail = response.json().get("detail", [])
@@ -245,9 +233,30 @@ def test_create_item_invalid_characters(client):
     """Test creating an item with invalid characters fails"""
     # Create a list first
     client.post("/api/v1/lists/todo")
-    response = client.post("/api/v1/lists/todo/items/", json={"name": "item@name"})
+    response = client.post("/api/v1/lists/todo/items/item@name")
     assert response.status_code == 422
     # Check that the error message contains the expected pattern
     detail = response.json().get("detail", [])
     assert len(detail) > 0
     assert "pattern" in str(detail[0].get("msg", ""))
+
+
+def test_get_item_success(client):
+    """Test getting an item by name successfully"""
+    # Create a list and item
+    client.post("/api/v1/lists/shopping")
+    client.post("/api/v1/lists/shopping/items/milk")
+    # Get the item
+    response = client.get("/api/v1/lists/shopping/items/milk")
+    assert response.status_code == 200
+    assert response.json() == {"id": 1, "list_id": 1, "name": "milk"}
+
+
+def test_get_item_not_found(client):
+    """Test getting a non-existent item fails"""
+    # Create a list
+    client.post("/api/v1/lists/shopping")
+    # Try to get a non-existent item
+    response = client.get("/api/v1/lists/shopping/items/nonexistent")
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Item not found"}
