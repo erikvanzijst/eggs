@@ -231,6 +231,41 @@ async def get_items(list_name: str, db: Session = Depends(get_db)) -> list[str]:
     return [item.name for item in items]
 
 
+@app.get("/api/v1/lists/{list_name}/items/{item_name}")
+async def get_item(
+    list_name: ValidatedName, item_name: ValidatedName, db: Session = Depends(get_db)
+) -> ItemResponse:
+    """
+    Get an item from a list.
+
+    Args:
+        list_name (str): The name of the list
+        item_name (str): The name of the item to retrieve
+
+    Returns:
+        ItemResponse: The item object
+
+    Raises:
+        HTTPException: If the list or item is not found
+    """
+    logger.info(f"Getting item '{item_name}' from list: {list_name}")
+    list_obj = await get_list_by_name(list_name, db)
+
+    statement = select(ItemModel).where(
+        ItemModel.list_id == list_obj.id, ItemModel.name == item_name
+    )
+    item = db.exec(statement).first()
+
+    if not item:
+        logger.warning(
+            f"Attempted to get non-existent item '{item_name}' from list '{list_name}'"
+        )
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    logger.info(f"Successfully retrieved item '{item_name}' from list '{list_name}'")
+    return ItemResponse.model_validate(item)
+
+
 @app.delete("/api/v1/lists/{list_name}/items/{item_name}")
 async def delete_item(
     list_name: ValidatedName, item_name: ValidatedName, db: Session = Depends(get_db)
