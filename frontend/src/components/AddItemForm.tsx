@@ -3,8 +3,7 @@ import {
   Box,
   TextField,
   Button,
-  Alert,
-  Typography
+  Alert
 } from '@mui/material';
 import ShoppingListService from '../services/shoppingListService';
 
