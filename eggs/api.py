@@ -1,13 +1,15 @@
 # Standard library imports
 import os
 import logging
+import re
 
 # Third-party imports
 import uvicorn
 from fastapi import FastAPI, HTTPException, Depends
 from sqlmodel import select, Session
 from sqlalchemy.exc import IntegrityError
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from typing import Annotated
 
 # Local imports
 from eggs.db import get_db, ListModel, ItemModel
@@ -28,10 +30,16 @@ app = FastAPI(
 )
 
 
+# Reusable validated name field using Pydantic's Field constraints
+ValidatedName = Annotated[
+    str, Field(min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9 _-]+$")
+]
+
+
 class ItemCreate(BaseModel):
     """Model for creating a new item."""
 
-    name: str
+    name: ValidatedName
 
 
 class ListResponse(BaseModel):
@@ -40,7 +48,7 @@ class ListResponse(BaseModel):
     model_config = {"from_attributes": True}
 
     id: int
-    name: str
+    name: ValidatedName
 
 
 class ItemResponse(BaseModel):
@@ -50,7 +58,7 @@ class ItemResponse(BaseModel):
 
     id: int
     list_id: int
-    name: str
+    name: ValidatedName
 
 
 async def get_list_by_name(list_name: str, db: Session) -> ListModel:
@@ -103,38 +111,10 @@ async def read_lists(db: Session = Depends(get_db)) -> list[str]:
     return [list_item.name for list_item in lists]
 
 
-def validate_name(name: str, name_type: str) -> None:
-    """
-    Validate the name of a list or item.
-
-    Args:
-        name (str): The name to validate
-        name_type (str): The type of name being validated (list or item)
-
-    Raises:
-        HTTPException: If the name is invalid
-    """
-    if not name:
-        raise HTTPException(
-            status_code=400, detail=f"{name_type.capitalize()} name cannot be empty"
-        )
-
-    if len(name) > 100:
-        raise HTTPException(
-            status_code=400,
-            detail=f"{name_type.capitalize()} name cannot exceed 100 characters",
-        )
-
-    # Allow only alphanumeric characters, spaces, hyphens, and underscores
-    if not name.replace(" ", "").replace("-", "").replace("_", "").isalnum():
-        raise HTTPException(
-            status_code=400,
-            detail=f"{name_type.capitalize()} name can only contain alphanumeric characters, spaces, hyphens, and underscores",
-        )
-
-
 @app.post("/api/v1/lists/{name}")
-async def create_list(name: str, db: Session = Depends(get_db)) -> ListResponse:
+async def create_list(
+    name: ValidatedName, db: Session = Depends(get_db)
+) -> ListResponse:
     """
     Create a new list.
 
@@ -145,9 +125,8 @@ async def create_list(name: str, db: Session = Depends(get_db)) -> ListResponse:
         ListResponse: The created list object
 
     Raises:
-        HTTPException: If the list already exists or name is invalid
+        HTTPException: If the list already exists
     """
-    validate_name(name, "list")
 
     logger.info(f"Creating list: {name}")
     try:
@@ -193,7 +172,7 @@ async def delete_list(name: str, db: Session = Depends(get_db)) -> dict[str, str
 
 @app.post("/api/v1/lists/{list_name}/items/")
 async def create_item(
-    list_name: str, item: ItemCreate, db: Session = Depends(get_db)
+    list_name: ValidatedName, item: ItemCreate, db: Session = Depends(get_db)
 ) -> ItemResponse:
     """
     Create a new item in a list.
@@ -208,8 +187,6 @@ async def create_item(
     Raises:
         HTTPException: If the list is not found or item already exists
     """
-    validate_name(list_name, "list")
-    validate_name(item.name, "item")
 
     logger.info(f"Creating item '{item.name}' in list: {list_name}")
     list_obj = await get_list_by_name(list_name, db)

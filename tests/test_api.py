@@ -202,17 +202,18 @@ def test_create_list_long_name(client):
     """Test creating a list with a name exceeding 100 characters fails"""
     long_name = "a" * 101
     response = client.post(f"/api/v1/lists/{long_name}")
-    assert response.status_code == 400
-    assert "cannot exceed 100 characters" in response.json().get("detail", "")
+    assert response.status_code == 422
+    assert "string_too_long" in response.json().get("detail", [{}])[0].get("type")
 
 
 def test_create_list_invalid_characters(client):
     """Test creating a list with invalid characters fails"""
     response = client.post("/api/v1/lists/list@name")
-    assert response.status_code == 400
-    assert "can only contain alphanumeric characters" in response.json().get(
-        "detail", ""
-    )
+    assert response.status_code == 422
+    # Check that the error message contains the expected pattern
+    detail = response.json().get("detail", [])
+    assert len(detail) > 0
+    assert "pattern" in str(detail[0].get("msg", ""))
 
 
 def test_create_item_empty_name(client):
@@ -220,8 +221,11 @@ def test_create_item_empty_name(client):
     # Create a list first
     client.post("/api/v1/lists/todo")
     response = client.post("/api/v1/lists/todo/items/", json={"name": ""})
-    assert response.status_code == 400
-    assert "cannot be empty" in response.json().get("detail", "")
+    assert response.status_code == 422
+    # Check that the error message contains the expected min_length error
+    detail = response.json().get("detail", [])
+    assert len(detail) > 0
+    assert "min_length" in str(detail[0].get("ctx", {}))
 
 
 def test_create_item_long_name(client):
@@ -230,8 +234,11 @@ def test_create_item_long_name(client):
     client.post("/api/v1/lists/todo")
     long_name = "a" * 101
     response = client.post("/api/v1/lists/todo/items/", json={"name": long_name})
-    assert response.status_code == 400
-    assert "cannot exceed 100 characters" in response.json().get("detail", "")
+    assert response.status_code == 422
+    # Check that the error message contains the expected max_length error
+    detail = response.json().get("detail", [])
+    assert len(detail) > 0
+    assert "max_length" in str(detail[0].get("ctx", {}))
 
 
 def test_create_item_invalid_characters(client):
@@ -239,7 +246,8 @@ def test_create_item_invalid_characters(client):
     # Create a list first
     client.post("/api/v1/lists/todo")
     response = client.post("/api/v1/lists/todo/items/", json={"name": "item@name"})
-    assert response.status_code == 400
-    assert "can only contain alphanumeric characters" in response.json().get(
-        "detail", ""
-    )
+    assert response.status_code == 422
+    # Check that the error message contains the expected pattern
+    detail = response.json().get("detail", [])
+    assert len(detail) > 0
+    assert "pattern" in str(detail[0].get("msg", ""))
