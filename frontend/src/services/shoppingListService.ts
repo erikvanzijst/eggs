@@ -50,7 +50,7 @@ class ShoppingListService {
    */
   static async createItem(listName: string, item: {name: string}): Promise<any> {
     try {
-      const response = await fetch(`${API_BASE_URL}/lists/${listName}/items/`, {
+      const response = await fetch(`${API_BASE_URL}/lists/${listName}/items/${item.name}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
