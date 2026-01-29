@@ -57,28 +57,28 @@ describe('ShoppingListService', () => {
   });
 
   describe('createItem', () => {
-    it('should create an item successfully', async () => {
-      const listName = 'Groceries';
-      const item = { name: 'Cheese' };
-      const mockCreatedItem = { id: 1, name: 'Cheese' };
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValue(mockCreatedItem)
-      });
+it('should create an item successfully', async () => {
+       const listName = 'Groceries';
+       const item = { name: 'Cheese' };
+       const mockCreatedItem = { id: 1, name: 'Cheese' };
+       (global.fetch as jest.Mock).mockResolvedValueOnce({
+         ok: true,
+         json: jest.fn().mockResolvedValue(mockCreatedItem)
+       });
 
-      const createdItem = await ShoppingListService.createItem(listName, item);
-      expect(createdItem).toEqual(mockCreatedItem);
-      expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8000/api/v1/lists/Groceries/items/',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(item),
-        }
-      );
-    });
+       const createdItem = await ShoppingListService.createItem(listName, item);
+       expect(createdItem).toEqual(mockCreatedItem);
+       expect(global.fetch).toHaveBeenCalledWith(
+         'http://localhost:8000/api/v1/lists/Groceries/items/Cheese',
+         {
+           method: 'POST',
+           headers: {
+             'Content-Type': 'application/json',
+           },
+           body: JSON.stringify(item),
+         }
+       );
+     });
 
     it('should throw an error when creating item fails', async () => {
       const listName = 'Groceries';
