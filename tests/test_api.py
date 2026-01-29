@@ -239,3 +239,24 @@ def test_create_item_invalid_characters(client):
     detail = response.json().get("detail", [])
     assert len(detail) > 0
     assert "pattern" in str(detail[0].get("msg", ""))
+
+
+def test_get_item_success(client):
+    """Test getting an item by name successfully"""
+    # Create a list and item
+    client.post("/api/v1/lists/shopping")
+    client.post("/api/v1/lists/shopping/items/milk")
+    # Get the item
+    response = client.get("/api/v1/lists/shopping/items/milk")
+    assert response.status_code == 200
+    assert response.json() == {"id": 1, "list_id": 1, "name": "milk"}
+
+
+def test_get_item_not_found(client):
+    """Test getting a non-existent item fails"""
+    # Create a list
+    client.post("/api/v1/lists/shopping")
+    # Try to get a non-existent item
+    response = client.get("/api/v1/lists/shopping/items/nonexistent")
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Item not found"}
