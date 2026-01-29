@@ -154,30 +154,57 @@ describe('ShoppingListService', () => {
     });
   });
 
-  describe('deleteList', () => {
-    it('should delete a list successfully', async () => {
-      const listName = 'To-Do';
-      const mockResult = { message: 'List deleted successfully' };
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValue(mockResult)
-      });
+describe('deleteList', () => {
+     it('should delete a list successfully', async () => {
+       const listName = 'To-Do';
+       const mockResult = { message: 'List deleted successfully' };
+       (global.fetch as jest.Mock).mockResolvedValueOnce({
+         ok: true,
+         json: jest.fn().mockResolvedValue(mockResult)
+       });
 
-      const result = await ShoppingListService.deleteList(listName);
-      expect(result).toEqual(mockResult);
-      expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/api/v1/lists/To-Do', {
-        method: 'DELETE'
-      });
-    });
+       const result = await ShoppingListService.deleteList(listName);
+       expect(result).toEqual(mockResult);
+       expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/api/v1/lists/To-Do', {
+         method: 'DELETE'
+       });
+     });
 
-    it('should throw an error when deleting list fails', async () => {
-      const listName = 'To-Do';
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-        status: 500
-      });
+     it('should throw an error when deleting list fails', async () => {
+       const listName = 'To-Do';
+       (global.fetch as jest.Mock).mockResolvedValueOnce({
+         ok: false,
+         status: 500
+       });
 
-      await expect(ShoppingListService.deleteList(listName)).rejects.toThrow('HTTP error! status: 500');
-    });
-  });
+       await expect(ShoppingListService.deleteList(listName)).rejects.toThrow('HTTP error! status: 500');
+     });
+   });
+
+   describe('getItem', () => {
+     it('should get an item successfully', async () => {
+       const listName = 'Groceries';
+       const itemName = 'Milk';
+       const mockItem = { id: 1, list_id: 1, name: 'Milk' };
+       (global.fetch as jest.Mock).mockResolvedValueOnce({
+         ok: true,
+         json: jest.fn().mockResolvedValue(mockItem)
+       });
+
+       const item = await ShoppingListService.getItem(listName, itemName);
+       expect(item).toEqual(mockItem);
+       expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/api/v1/lists/Groceries/items/Milk');
+     });
+
+     it('should throw an error when getting item fails', async () => {
+       const listName = 'Groceries';
+       const itemName = 'Milk';
+       (global.fetch as jest.Mock).mockResolvedValueOnce({
+         ok: false,
+         status: 404
+       });
+
+       await expect(ShoppingListService.getItem(listName, itemName)).rejects.toThrow('HTTP error! status: 404');
+     });
+   });
 });
