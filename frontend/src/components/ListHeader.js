@@ -1,0 +1,21 @@
+import React from 'react';
+import { AppBar, Toolbar, Typography, Box } from '@mui/material';
+
+const ListHeader = ({ listName }) => {
+  return (
+    <AppBar position="static">
+      <Toolbar>
+        <Box sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" component="div" sx={{ 
+            textAlign: 'center',
+            fontWeight: 'bold'
+          }}>
+            {listName || 'Shopping List'}
+          </Typography>
+        </Box>
+      </Toolbar>
+    </AppBar>
+  );
+};
+
+export default ListHeader;
