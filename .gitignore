@@ -3,3 +3,4 @@
 __pycache__/
 lists.db
 /eggs.egg-info/
+var/
