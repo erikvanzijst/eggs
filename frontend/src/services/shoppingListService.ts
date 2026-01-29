@@ -114,26 +114,46 @@ class ShoppingListService {
     }
   }
 
-  /**
-   * Delete a list
-   * @param {string} listName - Name of the list to delete
-   * @returns {Promise<{message: string}>} Delete confirmation message
-   */
-  static async deleteList(listName: string): Promise<{message: string}> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/lists/${listName}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const result = await response.json();
-      return result;
-    } catch (error) {
-      console.error(`Error deleting list ${listName}:`, error);
-      throw error;
-    }
-  }
+/**
+    * Get an item from a list
+    * @param {string} listName - Name of the list
+    * @param {string} itemName - Name of the item to retrieve
+    * @returns {Promise<object>} Item response
+    */
+   static async getItem(listName: string, itemName: string): Promise<any> {
+     try {
+       const response = await fetch(`${API_BASE_URL}/lists/${listName}/items/${itemName}`);
+       if (!response.ok) {
+         throw new Error(`HTTP error! status: ${response.status}`);
+       }
+       const item = await response.json();
+       return item;
+     } catch (error) {
+       console.error(`Error getting item ${itemName} from list ${listName}:`, error);
+       throw error;
+     }
+   }
+
+   /**
+    * Delete a list
+    * @param {string} listName - Name of the list to delete
+    * @returns {Promise<{message: string}>} Delete confirmation message
+    */
+   static async deleteList(listName: string): Promise<{message: string}> {
+     try {
+       const response = await fetch(`${API_BASE_URL}/lists/${listName}`, {
+         method: 'DELETE',
+       });
+       if (!response.ok) {
+         throw new Error(`HTTP error! status: ${response.status}`);
+       }
+       const result = await response.json();
+       return result;
+     } catch (error) {
+       console.error(`Error deleting list ${listName}:`, error);
+       throw error;
+     }
+   }
 }
 
 export default ShoppingListService;
