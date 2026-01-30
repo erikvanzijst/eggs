@@ -76,8 +76,7 @@ function App() {
       <Router>
         <div className="App">
           <Routes>
-            <Route path="/" element={<Navigate to="/lists/Grocery List" replace />} />
-            <Route path="/lists/:listName" element={<ListRoute />} />
+            <Route path="/:listName" element={<ListRoute />} />
           </Routes>
         </div>
       </Router>
