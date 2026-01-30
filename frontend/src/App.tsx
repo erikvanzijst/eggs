@@ -5,7 +5,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import ListHeader from './components/ListHeader';
 import ItemList from './components/ItemList';
 import ShoppingListService from './services/shoppingListService';
-import { NotFoundError } from "./exceptions";
+import { ConflictError } from "./exceptions";
 
 const theme = createTheme();
 
@@ -31,11 +31,11 @@ const ListRoute = () => {
       if (listName) {
         try {
           try {
-            await ShoppingListService.getList(listName);
+            // auto-create if necessary
+            await ShoppingListService.createList(listName);
           } catch (error) {
-            if (error instanceof NotFoundError) {
-              console.log('List not found -- auto-creating...');
-              await ShoppingListService.createList(listName);
+            if (error instanceof ConflictError) {
+              // list already exists -- noop
             } else {
               throw error;
             }

@@ -149,7 +149,7 @@ async def create_list(
     except IntegrityError:
         db.rollback()
         logger.warning(f"Failed to create list {name}: already exists")
-        raise HTTPException(status_code=400, detail="List already exists")
+        raise HTTPException(status_code=409, detail="List already exists")
 
 
 @app.delete("/api/v1/lists/{name}")

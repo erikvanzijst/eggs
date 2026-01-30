@@ -1,5 +1,5 @@
 import ShoppingListService from './shoppingListService';
-import NotFoundError from '../exceptions';
+import { NotFoundError } from '../exceptions';
 
 // Mock fetch globally for testing
 global.fetch = jest.fn();
@@ -204,7 +204,7 @@ describe('deleteList', () => {
          status: 404
        });
 
-       await expect(ShoppingListService.getItem(listName, itemName)).rejects.toThrow(NotFoundError);
+       await expect(ShoppingListService.getItem(listName, itemName)).rejects.toBeInstanceOf(NotFoundError);
      });
    });
 });

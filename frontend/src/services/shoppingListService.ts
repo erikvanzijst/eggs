@@ -1,4 +1,4 @@
-import { APIError, NotFoundError} from '../exceptions';
+import { APIError, ConflictError, NotFoundError } from '../exceptions';
 
 // Base URL for the API - using the environment variable or default to localhost
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api/v1';
@@ -46,7 +46,11 @@ class ShoppingListService {
       },
     });
     if (!response.ok) {
-      throw new APIError(`HTTP error! status: ${response.status}`);
+      if (response.status === 409) {
+        throw new ConflictError("List already exists");
+      } else {
+        throw new APIError(`HTTP error! status: ${response.status}`);
+      }
     }
     return await response.json();
   }
