@@ -29,7 +29,7 @@ const ItemList = ({ listName }: ItemListProps) => {
       setLoading(true);
       setError(null);
 
-      const itemsData = await ShoppingListService.fetchItems(listName);
+      const itemsData = await ShoppingListService.getItems(listName);
 
       // Sort items alphabetically (case insensitive)
       const sortedItems = itemsData.sort((a, b) =>

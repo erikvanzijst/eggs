@@ -1,4 +1,5 @@
 import ShoppingListService from './shoppingListService';
+import NotFoundError from '../exceptions';
 
 // Mock fetch globally for testing
 global.fetch = jest.fn();
@@ -16,7 +17,7 @@ describe('ShoppingListService', () => {
         json: jest.fn().mockResolvedValue(mockLists)
       });
 
-      const lists = await ShoppingListService.fetchLists();
+      const lists = await ShoppingListService.getLists();
       expect(lists).toEqual(mockLists);
       expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/api/v1/lists/');
     });
@@ -27,7 +28,7 @@ describe('ShoppingListService', () => {
         status: 500
       });
 
-      await expect(ShoppingListService.fetchLists()).rejects.toThrow('HTTP error! status: 500');
+      await expect(ShoppingListService.getLists()).rejects.toThrow('HTTP error! status: 500');
     });
   });
 
@@ -40,7 +41,7 @@ describe('ShoppingListService', () => {
         json: jest.fn().mockResolvedValue(mockItems)
       });
 
-      const items = await ShoppingListService.fetchItems(listName);
+      const items = await ShoppingListService.getItems(listName);
       expect(items).toEqual(mockItems);
       expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/api/v1/lists/Groceries/items/');
     });
@@ -52,7 +53,7 @@ describe('ShoppingListService', () => {
         status: 500
       });
 
-      await expect(ShoppingListService.fetchItems(listName)).rejects.toThrow('HTTP error! status: 500');
+      await expect(ShoppingListService.getItems(listName)).rejects.toThrow('HTTP error! status: 500');
     });
   });
 
@@ -163,8 +164,7 @@ describe('deleteList', () => {
          json: jest.fn().mockResolvedValue(mockResult)
        });
 
-       const result = await ShoppingListService.deleteList(listName);
-       expect(result).toEqual(mockResult);
+       await ShoppingListService.deleteList(listName);
        expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/api/v1/lists/To-Do', {
          method: 'DELETE'
        });
@@ -204,7 +204,7 @@ describe('deleteList', () => {
          status: 404
        });
 
-       await expect(ShoppingListService.getItem(listName, itemName)).rejects.toThrow('HTTP error! status: 404');
+       await expect(ShoppingListService.getItem(listName, itemName)).rejects.toThrow(NotFoundError);
      });
    });
 });

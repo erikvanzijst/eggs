@@ -70,7 +70,8 @@ class ItemResponse(BaseModel):
     name: ValidatedName
 
 
-async def get_list_by_name(list_name: str, db: Session) -> ListModel:
+@app.get("/api/v1/lists/{list_name}")
+async def get_list_by_name(list_name: str, db: Session = Depends(get_db)) -> ListModel:
     """
     Get a list by name.
 
@@ -88,7 +89,7 @@ async def get_list_by_name(list_name: str, db: Session) -> ListModel:
     list_item = db.exec(statement).first()
 
     if not list_item:
-        raise HTTPException(status_code=404, detail="List not found")
+        raise HTTPException(status_code=404, detail=f"List not found: {list_name}")
 
     return list_item
 
