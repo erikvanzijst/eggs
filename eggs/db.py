@@ -1,24 +1,26 @@
 import os
-from sqlmodel import create_engine, Session, SQLModel, Field, Relationship
 from typing import Generator, Optional
+
 from sqlalchemy import UniqueConstraint
+from sqlmodel import create_engine, Session, SQLModel, Field, Relationship
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///lists.db")
 engine = create_engine(DATABASE_URL, echo=False)
 
 
 class ListModel(SQLModel, table=True):
+    __tablename__ = "lists"
     id: int = Field(default=None, primary_key=True)
     name: str = Field(unique=True)
     items: list["ItemModel"] = Relationship(back_populates="list", cascade_delete=True)
 
 
 class ItemModel(SQLModel, table=True):
-    __tablename__ = "item"
+    __tablename__ = "items"
     __table_args__ = (UniqueConstraint("list_id", "name", name="uq_item_list_name"),)
 
     id: int = Field(default=None, primary_key=True)
-    list_id: int = Field(foreign_key="listmodel.id", ondelete="CASCADE")
+    list_id: int = Field(foreign_key="lists.id", ondelete="CASCADE")
     name: str
     list: Optional[ListModel] = Relationship(back_populates="items")
 
