@@ -212,10 +212,8 @@ async def create_item(
         return ItemResponse.model_validate(new_item)
     except IntegrityError:
         db.rollback()
-        logger.warning(
-            f"Failed to create item '{item_name}' in list '{list_name}': already exists"
-        )
-        raise HTTPException(status_code=400, detail="Item already exists in this list")
+        logger.warning(f"Failed to create item '{item_name}' in list '{list_name}': already exists")
+        raise HTTPException(status_code=409, detail="Item already exists in this list")
 
 
 @app.get("/api/v1/lists/{list_name}/items/")

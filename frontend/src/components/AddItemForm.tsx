@@ -6,6 +6,7 @@ import {
   Alert
 } from '@mui/material';
 import ShoppingListService from '../services/shoppingListService';
+import {ConflictError} from "../exceptions";
 
 interface AddItemFormProps {
   listName?: string;
@@ -40,20 +41,19 @@ const AddItemForm = ({ listName, onItemAdded }: AddItemFormProps) => {
     
     try {
       // Create the item
-      await ShoppingListService.createItem(listName, { name: itemName.trim() });
-      
+      await ShoppingListService.createItem(listName, {name: itemName.trim()});
+
       // Reset form
       setItemName('');
       setSuccess(true);
-      
+
       // Call parent callback if provided
       if (onItemAdded) {
         onItemAdded();
       }
     } catch (err: any) {
-      // Check for duplicate item error (assuming backend returns a specific error for duplicates)
-      if (err.message && err.message.includes('duplicate')) {
-        setError('This item already exists in the list');
+      if (err instanceof ConflictError) {
+        setError(`We already have ${itemName}!`);
       } else {
         setError(`Error adding item: ${err.message}`);
       }

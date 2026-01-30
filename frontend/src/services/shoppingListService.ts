@@ -87,7 +87,9 @@ class ShoppingListService {
       body: JSON.stringify(item),
     });
     if (!response.ok) {
-      if (response.status === 404) {
+      if (response.status === 409) {
+        throw new ConflictError(`${item} already exists`);
+      } else if (response.status === 404) {
         throw new NotFoundError(`No such list: ${listName}`);
       } else {
         throw new APIError(`HTTP error! status: ${response.status}`);
