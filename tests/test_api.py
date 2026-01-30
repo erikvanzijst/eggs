@@ -79,7 +79,12 @@ def test_create_item_success(client):
     # Create an item
     response = client.post("/api/v1/lists/shopping/items/milk")
     assert response.status_code == 200
-    assert response.json() == {"id": 1, "list_id": 1, "name": "milk"}
+    assert response.json() == {
+        "id": 1,
+        "list_id": 1,
+        "name": "milk",
+        "is_in_cart": False,
+    }
 
 
 def test_create_duplicate_item(client):
@@ -245,7 +250,12 @@ def test_get_item_success(client):
     # Get the item
     response = client.get("/api/v1/lists/shopping/items/milk")
     assert response.status_code == 200
-    assert response.json() == {"id": 1, "list_id": 1, "name": "milk"}
+    assert response.json() == {
+        "id": 1,
+        "list_id": 1,
+        "name": "milk",
+        "is_in_cart": False,
+    }
 
 
 def test_get_item_not_found(client):
@@ -254,5 +264,102 @@ def test_get_item_not_found(client):
     client.post("/api/v1/lists/shopping")
     # Try to get a non-existent item
     response = client.get("/api/v1/lists/shopping/items/nonexistent")
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Item not found"}
+
+
+def test_update_item_toggle_flag_false_to_true(client):
+    """Test updating an item's is_in_cart flag from False to True"""
+    # Create a list and item
+    client.post("/api/v1/lists/shopping")
+    client.post("/api/v1/lists/shopping/items/milk")
+
+    # Update the item to set is_in_cart=True
+    response = client.put(
+        "/api/v1/lists/shopping/items/milk", json={"is_in_cart": True}
+    )
+    assert response.status_code == 200
+    assert response.json() == {
+        "id": 1,
+        "list_id": 1,
+        "name": "milk",
+        "is_in_cart": True,
+    }
+
+
+def test_update_item_toggle_flag_true_to_false(client):
+    """Test updating an item's is_in_cart flag from True to False"""
+    # Create a list and item
+    client.post("/api/v1/lists/shopping")
+    client.post("/api/v1/lists/shopping/items/milk")
+
+    # First update to set is_in_cart=True
+    response1 = client.put(
+        "/api/v1/lists/shopping/items/milk", json={"is_in_cart": True}
+    )
+    assert response1.status_code == 200
+
+    # Then update to set is_in_cart=False
+    response2 = client.put(
+        "/api/v1/lists/shopping/items/milk", json={"is_in_cart": False}
+    )
+    assert response2.status_code == 200
+    assert response2.json() == {
+        "id": 1,
+        "list_id": 1,
+        "name": "milk",
+        "is_in_cart": False,
+    }
+
+
+def test_update_item_toggle_flag_idempotent(client):
+    """Test that toggling the flag multiple times with the same value is idempotent"""
+    # Create a list and item
+    client.post("/api/v1/lists/shopping")
+    client.post("/api/v1/lists/shopping/items/milk")
+
+    # Update multiple times with the same value (should be idempotent)
+    response1 = client.put(
+        "/api/v1/lists/shopping/items/milk", json={"is_in_cart": True}
+    )
+    assert response1.status_code == 200
+    assert response1.json() == {
+        "id": 1,
+        "list_id": 1,
+        "name": "milk",
+        "is_in_cart": True,
+    }
+
+    response2 = client.put(
+        "/api/v1/lists/shopping/items/milk", json={"is_in_cart": True}
+    )
+    assert response2.status_code == 200
+    assert response2.json() == {
+        "id": 1,
+        "list_id": 1,
+        "name": "milk",
+        "is_in_cart": True,
+    }
+
+    response3 = client.put(
+        "/api/v1/lists/shopping/items/milk", json={"is_in_cart": True}
+    )
+    assert response3.status_code == 200
+    assert response3.json() == {
+        "id": 1,
+        "list_id": 1,
+        "name": "milk",
+        "is_in_cart": True,
+    }
+
+
+def test_update_item_nonexistent(client):
+    """Test updating a non-existent item fails"""
+    # Create a list
+    client.post("/api/v1/lists/shopping")
+    # Try to update a non-existent item
+    response = client.put(
+        "/api/v1/lists/shopping/items/nonexistent", json={"is_in_cart": True}
+    )
     assert response.status_code == 404
     assert response.json() == {"detail": "Item not found"}

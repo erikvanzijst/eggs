@@ -22,7 +22,6 @@ class ItemModel(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     list_id: int = Field(foreign_key="lists.id", ondelete="CASCADE")
     name: str
-    is_in_cart: bool = Field(default=False)
     list: Optional[ListModel] = Relationship(back_populates="items")
 
 

@@ -45,6 +45,12 @@ ValidatedName = Annotated[
 ]
 
 
+class ItemUpdate(BaseModel):
+    """Model for updating an item's properties."""
+
+    is_in_cart: bool
+
+
 class ItemCreate(BaseModel):
     """Model for creating a new item."""
 
@@ -68,6 +74,7 @@ class ItemResponse(BaseModel):
     id: int
     list_id: int
     name: ValidatedName
+    is_in_cart: bool
 
 
 @app.get("/api/v1/lists/{list_name}")
@@ -212,7 +219,9 @@ async def create_item(
         return ItemResponse.model_validate(new_item)
     except IntegrityError:
         db.rollback()
-        logger.warning(f"Failed to create item '{item_name}' in list '{list_name}': already exists")
+        logger.warning(
+            f"Failed to create item '{item_name}' in list '{list_name}': already exists"
+        )
         raise HTTPException(status_code=409, detail="Item already exists in this list")
 
 
@@ -311,6 +320,54 @@ async def delete_item(
     return {
         "message": f"Item '{item_name}' deleted successfully from list '{list_name}'"
     }
+
+
+@app.put("/api/v1/lists/{list_name}/items/{item_name}")
+async def update_item(
+    list_name: ValidatedName,
+    item_name: ValidatedName,
+    item_update: ItemUpdate,
+    db: Session = Depends(get_db),
+) -> ItemResponse:
+    """
+    Update an item in a list.
+
+    Args:
+        list_name (str): The name of the list
+        item_name (str): The name of the item to update
+        item_update (ItemUpdate): The updates to apply to the item
+
+    Returns:
+        ItemResponse: The updated item object
+
+    Raises:
+        HTTPException: If the list or item is not found
+    """
+    logger.info(f"Updating item '{item_name}' in list: {list_name}")
+
+    # Get the list
+    list_obj = await get_list_by_name(list_name, db)
+
+    # Get the item
+    statement = select(ItemModel).where(
+        ItemModel.list_id == list_obj.id, ItemModel.name == item_name
+    )
+    item = db.exec(statement).first()
+
+    if not item:
+        logger.warning(
+            f"Attempted to update non-existent item '{item_name}' in list '{list_name}'"
+        )
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    # Update the item
+    for key, value in item_update.model_dump(exclude_unset=True).items():
+        setattr(item, key, value)
+
+    db.commit()
+    db.refresh(item)
+    logger.info(f"Successfully updated item '{item_name}' in list '{list_name}'")
+    return ItemResponse.model_validate(item)
 
 
 async def main() -> None:
